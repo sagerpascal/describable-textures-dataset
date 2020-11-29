@@ -4,9 +4,10 @@ import albumentations as A
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
+import wandb
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
-import wandb
+
 from dataset import DtdDataset, get_training_augmentation, get_validation_augmentation
 from epoch import TrainEpoch, ValidEpoch
 from metrics import Accuracy, Fscore, Recall, Precision, AccuracyT1
@@ -88,7 +89,6 @@ def main():
     else:
         writer = SummaryWriter()
 
-
     if model_name == 'Simple FCN':
         model = SimpleFullyCnn().to(device)
         mask_size = model.get_mask_size()
@@ -128,17 +128,15 @@ def main():
     train_epoch = TrainEpoch(model, loss=loss, metrics=metrics, optimizer=optimizer, device=device, verbose=True)
     valid_epoch = ValidEpoch(model, loss=loss, metrics=metrics, device=device, verbose=True)
 
-
-
     best_loss = 9999
     count_not_improved = 0
     for i in range(num_epoch):
         train_logs = train_epoch.run(train_loader)
         valid_logs = valid_epoch.run(valid_loader)
 
-        if best_loss > valid_logs[loss.__name__] or i % 10 == 0:
+        if best_loss > valid_logs[loss.__name__] and i > 20 or i % 20 == 0:
             best_loss = valid_logs[loss.__name__]
-            torch.save(model, 'best_model_{}.pth'.format(i))
+            torch.save(model, '{}-best_model-{}.pth'.format(wandb.run.name, i))
             print("Model saved")
         else:
             count_not_improved += 1
