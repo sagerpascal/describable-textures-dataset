@@ -4,9 +4,8 @@ import albumentations as A
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
-import wandb
 from torch.utils.data import DataLoader
-from torch.utils.tensorboard import SummaryWriter
+
 
 from dataset import DtdDataset, get_training_augmentation, get_validation_augmentation
 from epoch import TrainEpoch, ValidEpoch
@@ -17,16 +16,16 @@ from models import SimpleFullyCnn
 device = 'cuda'
 num_epoch = 200
 model_name = 'Simple FCN'
-use_wandb = False
+use_wandb = True
 
 # Parameters from command line
 parser = argparse.ArgumentParser()
-parser.add_argument("--learing_rate")
+parser.add_argument("--learning_rate")
 parser.add_argument("--batch_size")
 parser.add_argument("--pweight_factor")
 
 args = parser.parse_args()
-lr = float(args.learing_rate)  # 0.000005
+lr = float(args.learning_rate)  # 0.000005
 batch_size = int(args.batch_size)  # 8
 pos_weight_factor = int(args.pweight_factor)
 
@@ -55,11 +54,11 @@ def get_preprocessing():
 
 
 def get_data_loaders(mask_size):
-    train_dataset = DtdDataset('images/dtd_train', mask_size, augmentation=get_training_augmentation(),
+    train_dataset = DtdDataset('data/dtd_train', mask_size, augmentation=get_training_augmentation(),
                                preprocessing=get_preprocessing())
-    valid_dataset = DtdDataset('images/dtd_val', mask_size, augmentation=get_validation_augmentation(),
+    valid_dataset = DtdDataset('data/dtd_val', mask_size, augmentation=get_validation_augmentation(),
                                preprocessing=get_preprocessing())
-    test_dataset = DtdDataset('images/dtd_test', mask_size, augmentation=None, preprocessing=get_preprocessing())
+    test_dataset = DtdDataset('data/dtd_test', mask_size, augmentation=None, preprocessing=get_preprocessing())
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=2)
     valid_loader = DataLoader(valid_dataset, batch_size=batch_size, shuffle=False, num_workers=1)
     test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False, num_workers=1)
@@ -79,14 +78,16 @@ class MyWeightedLoss(torch.nn.BCEWithLogitsLoss):
 
 
 def main():
+    import wandb
     if use_wandb:
-        wandb.init(project=model_name, entity="CompVis_DTD")
+        wandb.init(project="compvis_dtd_{}".format(model_name))
         wandb.config.update({"Model": model_name,
                              "Learning Rate": lr,
                              "Batch Size": batch_size,
                              "Pos- Weight": pos_weight_factor
                              })
     else:
+        from torch.utils.tensorboard import SummaryWriter
         writer = SummaryWriter()
 
     if model_name == 'Simple FCN':
@@ -134,10 +135,12 @@ def main():
         train_logs = train_epoch.run(train_loader)
         valid_logs = valid_epoch.run(valid_loader)
 
-        if best_loss > valid_logs[loss.__name__] and i > 20 or i % 20 == 0:
+        if best_loss > valid_logs[loss.__name__] + 0.00005:
             best_loss = valid_logs[loss.__name__]
-            torch.save(model, '{}-best_model-{}.pth'.format(wandb.run.name, i))
-            print("Model saved")
+            if i > 10:
+                torch.save(model, '{}-best_model-{}.pth'.format(wandb.run.name, i))
+                print("Model saved")
+            count_not_improved = 0
         else:
             count_not_improved += 1
 

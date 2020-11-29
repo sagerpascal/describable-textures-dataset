@@ -1,5 +1,6 @@
 name: CompVis Homework - DTD
 program: main.py
+project: compvis_dtd_unet_pretrained
 method: bayes
 metric:
   name: Top-1-Accuracy
@@ -7,11 +8,11 @@ metric:
 parameters:
   learning_rate:
     distribution: log_uniform
-      min: -13.815510557964274104107948728106
-      max: -4.6051701859880913680359829093687
+    min: -13.815510557964274104107948728106
+    max: -4.6051701859880913680359829093687
   batch_size:
     values: [1, 2, 3, 4, 6, 8, 12, 16, 24, 32, 64]
   pweight_factor:
-    distribution: uniform
-      min: 1
-      max: 46
+    distribution: int_uniform
+    min: 1
+    max: 46

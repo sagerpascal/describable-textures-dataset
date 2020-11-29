@@ -1,7 +1,7 @@
 import sys
 import torch
 from tqdm import tqdm as tqdm
-from .meter import AverageValueMeter
+from meter import AverageValueMeter
 
 
 class Epoch:
