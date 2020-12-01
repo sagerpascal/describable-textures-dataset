@@ -15,4 +15,4 @@ parameters:
   pweight_factor:
     distribution: int_uniform
     min: 1
-    max: 46
+    max: 48
