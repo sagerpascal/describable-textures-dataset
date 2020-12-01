@@ -1,5 +1,5 @@
 name: CompVis Homework - DTD
-program: main.py
+program: train.py
 project: compvis_dtd_unet_pretrained
 method: bayes
 metric:
@@ -16,3 +16,7 @@ parameters:
     distribution: int_uniform
     min: 1
     max: 48
+  wandb:
+    value: True
+  model_name:
+    values: ['Simple FCN', 'Simple U-Net', 'U-Net pretrained encoder']

@@ -15,20 +15,22 @@ from models import SimpleFullyCnn, SimpleUNet
 # Config
 device = 'cpu'
 num_classes = 47
-num_epoch = 75
-model_name = 'Simple U-Net'
-use_wandb = False
+max_num_epoch = 75
 
 # Parameters from command line
 parser = argparse.ArgumentParser()
 parser.add_argument("--learning_rate")
 parser.add_argument("--batch_size")
 parser.add_argument("--pweight_factor")
+parser.add_argument("--model_name")
+parser.add_argument("--wandb")
 
 args = parser.parse_args()
 lr = float(args.learning_rate)  # 0.000005
 batch_size = int(args.batch_size)  # 8
 pos_weight_factor = int(args.pweight_factor)
+model_name = str(args.model_name)
+use_wandb = bool(args.wandb)
 
 torch.cuda.empty_cache()
 
@@ -136,7 +138,7 @@ def main():
 
     best_loss = 9999
     count_not_improved = 0
-    for i in range(num_epoch):
+    for i in range(max_num_epoch):
         train_logs = train_epoch.run(train_loader)
         valid_logs = valid_epoch.run(valid_loader)
 
