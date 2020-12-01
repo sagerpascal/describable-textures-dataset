@@ -8,9 +8,11 @@ import torch.nn.functional as F
 #################################################################################################
 class SimpleFullyCnn(nn.Module):
 
-    def __init__(self):
+    def __init__(self, in_channels, out_channels):
         super(SimpleFullyCnn, self).__init__()
-        self.conv1 = nn.Conv2d(in_channels=1, out_channels=8, kernel_size=3, stride=1)
+        self.in_channels = in_channels
+        self.out_channels = out_channels
+        self.conv1 = nn.Conv2d(in_channels=in_channels, out_channels=8, kernel_size=3, stride=1)
         self.conv2 = nn.Conv2d(in_channels=8, out_channels=8, kernel_size=3, stride=1)
         self.conv3 = nn.Conv2d(in_channels=8, out_channels=8, kernel_size=3, stride=1)
         self.conv4 = nn.Conv2d(in_channels=8, out_channels=8, kernel_size=3, stride=1)
@@ -34,8 +36,8 @@ class SimpleFullyCnn(nn.Module):
         self.conv22 = nn.Conv2d(in_channels=16, out_channels=16, kernel_size=3, stride=1)
         self.conv23 = nn.Conv2d(in_channels=16, out_channels=32, kernel_size=3, stride=1)
         self.conv24 = nn.Conv2d(in_channels=32, out_channels=32, kernel_size=3, stride=1)
-        self.conv25 = nn.Conv2d(in_channels=32, out_channels=46, kernel_size=3, stride=1)
-        self.out = nn.Conv2d(in_channels=46, out_channels=46, kernel_size=1, stride=1)
+        self.conv25 = nn.Conv2d(in_channels=32, out_channels=47, kernel_size=3, stride=1)
+        self.out = nn.Conv2d(in_channels=47, out_channels=out_channels, kernel_size=1, stride=1)
 
 
     def forward(self, x):
@@ -64,7 +66,7 @@ class SimpleFullyCnn(nn.Module):
         x = F.relu(self.conv23(x))
         x = F.relu(self.conv24(x))
         x = F.relu(self.conv25(x))
-        return self.out(x)
+        return F.softmax(self.out(x))  # Softmax necessary???
 
     def get_mask_size(self):
         return 78, 78
@@ -212,7 +214,7 @@ class FeatureMapBlock(nn.Module):
         x = self.conv(x)
         return x
 
-class UNet(nn.Module):
+class SimpleUNet(nn.Module):
     '''
     UNet Class
     A series of 4 contracting blocks followed by 4 expanding blocks to
@@ -223,7 +225,7 @@ class UNet(nn.Module):
         output_channels: the number of channels to expect for a given output
     '''
     def __init__(self, input_channels, output_channels, hidden_channels=32):
-        super(UNet, self).__init__()
+        super(SimpleUNet, self).__init__()
         self.upfeature = FeatureMapBlock(input_channels, hidden_channels)
         self.contract1 = ContractingBlock(hidden_channels, use_dropout=True)
         self.contract2 = ContractingBlock(hidden_channels * 2, use_dropout=True)

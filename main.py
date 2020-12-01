@@ -10,13 +10,14 @@ from torch.utils.data import DataLoader
 from dataset import DtdDataset, get_training_augmentation, get_validation_augmentation
 from epoch import TrainEpoch, ValidEpoch
 from metrics import Accuracy, Fscore, Recall, Precision, AccuracyT1
-from models import SimpleFullyCnn
+from models import SimpleFullyCnn, SimpleUNet
 
 # Config
-device = 'cuda'
-num_epoch = 200
-model_name = 'Simple FCN'
-use_wandb = True
+device = 'cpu'
+num_classes = 47
+num_epoch = 75
+model_name = 'Simple U-Net'
+use_wandb = False
 
 # Parameters from command line
 parser = argparse.ArgumentParser()
@@ -40,7 +41,7 @@ def to_tensor(x, **kwargs):
 def to_tensor_mask(x, **kwargs):
     # With BCELossWithDigits
     x_tensor = torch.as_tensor(x.astype('int64'))
-    x_oh = torch.nn.functional.one_hot(x_tensor, num_classes=46).type(torch.DoubleTensor)
+    x_oh = torch.nn.functional.one_hot(x_tensor, num_classes=num_classes).type(torch.DoubleTensor)
     return x_oh.permute(2, 0, 1)
     # With CrossEntropyLoss
     # return torch.as_tensor(x.astype('int64'))
@@ -69,7 +70,7 @@ class MyWeightedLoss(torch.nn.BCEWithLogitsLoss):
 
     def __init__(self, mask_size, **kwargs):
         pos_weight = np.ones(
-            (46, mask_size[0], mask_size[1])) * pos_weight_factor  # increase recall (for the cost of a worse precision)
+            (num_classes, mask_size[0], mask_size[1])) * pos_weight_factor  # increase recall (for the cost of a worse precision)
         pos_weight = torch.FloatTensor(pos_weight)
         super().__init__(pos_weight=pos_weight, **kwargs)
 
@@ -91,15 +92,19 @@ def main():
         writer = SummaryWriter()
 
     if model_name == 'Simple FCN':
-        model = SimpleFullyCnn().to(device)
+        model = SimpleFullyCnn(in_channels=1, out_channels=num_classes).to(device)
         mask_size = model.get_mask_size()
+
+    elif model_name == 'Simple U-Net':
+        model = SimpleUNet(input_channels=1, output_channels=num_classes).to(device)
+        mask_size = (128, 128)
 
     elif model_name == 'U-Net pretrained encoder':
         import segmentation_models_pytorch as smp
         model = smp.Unet(
             encoder_name='resnet101',
             encoder_weights='imagenet',
-            classes=46,
+            classes=num_classes,
             in_channels=1,
             decoder_use_batchnorm=True,
             activation='softmax2d'
@@ -138,7 +143,10 @@ def main():
         if best_loss > valid_logs[loss.__name__] + 0.00005:
             best_loss = valid_logs[loss.__name__]
             if i > 10:
-                torch.save(model, '{}-best_model-{}.pth'.format(wandb.run.name, i))
+                if use_wandb:
+                    torch.save(model, '{}-best_model-{}.pth'.format(wandb.run.name, i))
+                else:
+                    torch.save(model, '{}-best_model-{}.pth'.format(model_name, i))
                 print("Model saved")
             count_not_improved = 0
         else:

@@ -7,7 +7,7 @@ import torch
 from PIL import Image
 
 
-# Mask range: 0-46
+# Mask range: 0-47
 class DtdDataset(torch.utils.data.Dataset):
 
     def __init__(self, image_path, mask_size, augmentation=None, preprocessing=None):
