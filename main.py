@@ -55,11 +55,11 @@ def get_preprocessing():
 
 
 def get_data_loaders(mask_size):
-    train_dataset = DtdDataset('data/dtd_train', mask_size, augmentation=get_training_augmentation(),
+    train_dataset = DtdDataset('data/dtd_train_tiled', mask_size, augmentation=get_training_augmentation(),
                                preprocessing=get_preprocessing())
-    valid_dataset = DtdDataset('data/dtd_val', mask_size, augmentation=get_validation_augmentation(),
+    valid_dataset = DtdDataset('data/dtd_val_tiled', mask_size, augmentation=get_validation_augmentation(),
                                preprocessing=get_preprocessing())
-    test_dataset = DtdDataset('data/dtd_test', mask_size, augmentation=None, preprocessing=get_preprocessing())
+    test_dataset = DtdDataset('data/dtd_test_tiled', mask_size, augmentation=None, preprocessing=get_preprocessing())
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=2)
     valid_loader = DataLoader(valid_dataset, batch_size=batch_size, shuffle=False, num_workers=1)
     test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False, num_workers=1)
@@ -92,11 +92,11 @@ def main():
         writer = SummaryWriter()
 
     if model_name == 'Simple FCN':
-        model = SimpleFullyCnn(in_channels=1, out_channels=num_classes).to(device)
+        model = SimpleFullyCnn(in_channels=3, out_channels=num_classes).to(device)
         mask_size = model.get_mask_size()
 
     elif model_name == 'Simple U-Net':
-        model = SimpleUNet(input_channels=1, output_channels=num_classes).to(device)
+        model = SimpleUNet(input_channels=3, output_channels=num_classes).to(device)
         mask_size = (128, 128)
 
     elif model_name == 'U-Net pretrained encoder':
@@ -105,7 +105,7 @@ def main():
             encoder_name='resnet101',
             encoder_weights='imagenet',
             classes=num_classes,
-            in_channels=1,
+            in_channels=3,
             decoder_use_batchnorm=True,
             activation='softmax2d'
         )

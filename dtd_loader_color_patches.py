@@ -388,4 +388,4 @@ def download_and_convert(dataset_dir = '.', dest_dir_root='.', tiled=False):
 
 
 if __name__ == '__main__':
-    download_and_convert()
+    download_and_convert(dest_dir_root='data/', tiled=True)
