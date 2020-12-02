@@ -19,6 +19,16 @@ Download the images:
 python dtd_loader_color_patches.py
 ```
 
+### Mask Distribution
+The following plot shows the distribution of the mask:
+
+<img src="doc/img/mask_distribution.png" alt="mask_distribution" style="zoom:80%;" />
+
+This distribution was considered with a weighted loss function.
+
+
+
+
 ### Train a model
 ```shell script
 python train [OPTIONS]
@@ -27,8 +37,7 @@ python train [OPTIONS]
 Arguments:
 - `--learning_rate`: The learning rate
 - `--batch_size`: The batch size
-- `--pweight_factor`: TODO
-- `--model_name`: Name of the model, one of `'Simple FCN'`, `'Simple U-Net'` or `'U-Net pretrained encoder'`
+- `--model_name`: Name of the model, one of `'simple_fcn'`, `'simple_u-net'` or `'pretrained_u-net'`
 - `--wandb`: Set to `True` if you want to use [wandb.ai](wandb.ai), default is using Tensorboard
 
 ##### Run Sweep
