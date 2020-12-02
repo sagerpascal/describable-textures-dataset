@@ -12,11 +12,7 @@ parameters:
     max: -4.6051701859880913680359829093687
   batch_size:
     values: [1, 2, 3, 4, 6, 8, 12, 16, 24, 32, 64]
-  pweight_factor:
-    distribution: int_uniform
-    min: 1
-    max: 48
   wandb:
     value: True
   model_name:
-    values: ['Simple FCN', 'Simple U-Net', 'U-Net pretrained encoder']
+    values: ['simple_fcn', 'simple_u-net', 'pretrained_u-net']
