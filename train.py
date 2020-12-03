@@ -1,14 +1,15 @@
 import argparse
-import albumentations as A
+import os
+
 import numpy as np
 import torch
+import yaml
 from torch.utils.data import DataLoader
 
 from dataset import DtdDataset, get_training_augmentation, get_validation_augmentation, get_preprocessing
 from epoch import TrainEpoch, ValidEpoch
 from metrics import Accuracy, Fscore, Recall, Precision, AccuracyT1
 from models import SimpleFullyCnn, SimpleUNet
-import yaml
 
 # Read Config
 conf = yaml.load(open('config.yaml'), Loader=yaml.FullLoader)
@@ -40,8 +41,10 @@ def get_data_loaders(mask_size):
                                preprocessing=get_preprocessing())
     valid_dataset = DtdDataset('data/dtd_val_tiled', mask_size, augmentation=get_validation_augmentation(),
                                preprocessing=get_preprocessing())
-    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=2, multiprocessing_context=torch.multiprocessing.get_context('spawn'))
-    valid_loader = DataLoader(valid_dataset, batch_size=batch_size, shuffle=False, num_workers=1, multiprocessing_context=torch.multiprocessing.get_context('spawn'))
+    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=2,
+                              multiprocessing_context=torch.multiprocessing.get_context('spawn'))
+    valid_loader = DataLoader(valid_dataset, batch_size=batch_size, shuffle=False, num_workers=1,
+                              multiprocessing_context=torch.multiprocessing.get_context('spawn'))
     return train_loader, valid_loader
 
 
@@ -95,6 +98,9 @@ def get_model():
     else:
         raise NotImplementedError("no such model: {}".format(model_name))
 
+    print("Model has {} parameters".format(sum(p.numel() for p in model.parameters())))
+    print(model)
+
     return model, mask_size
 
 
@@ -135,17 +141,21 @@ def main():
     best_loss = 9999
     count_not_improved = 0
     for i in range(max_num_epoch):
-        train_logs = train_epoch.run(train_loader)
+
+        for _ in range(3):
+            # run 3 training epochs before validation since validation set is pretty large
+            train_logs = train_epoch.run(train_loader)
         valid_logs = valid_epoch.run(valid_loader)
 
         if best_loss > valid_logs[loss.__name__] + 0.00005:
             best_loss = valid_logs[loss.__name__]
-            if i > 10:
-                if use_wandb:
-                    torch.save(model, '{}-best_model-{}.pth'.format(wandb.run.name, i))
-                else:
-                    torch.save(model, '{}-best_model-{}.pth'.format(model_name, i))
-                print("Model saved")
+            if not os.path.exists('trained_models'):
+                os.mkdir('trained_models')
+            if use_wandb:
+                torch.save(model, 'trained_models/{}-{}-{}.pth'.format(wandb.run.name, valid_logs[loss.__name__], i))
+            else:
+                torch.save(model, 'trained_models/{}-{}-{}.pth'.format(model_name, valid_logs[loss.__name__], i))
+            print("Model saved")
             count_not_improved = 0
         else:
             count_not_improved += 1
@@ -167,7 +177,7 @@ def main():
                 writer.add_scalar('{}({}/valid'.format(model_name, m_name), valid_logs[m_name], i)
 
         # Early stopping
-        if count_not_improved > 5:
+        if count_not_improved > 3:
             print("Early stopping!")
             break
 

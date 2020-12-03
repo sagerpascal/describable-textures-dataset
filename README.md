@@ -31,7 +31,7 @@ This distribution was considered with a weighted loss function.
 
 ### Train a model
 ```shell script
-python train [OPTIONS]
+python train.py [OPTIONS]
 ```
 
 Arguments:
@@ -50,6 +50,13 @@ wandb agent your-sweep-id
 ```
 
 ### Run a pretrained model
-TODO
+```shell script
+python evaluate.px [OPTIONS]
+```
+Arguments:
+- `--model_name`: Name of the model, one of `'simple_fcn'`, `'simple_u-net'` or `'pretrained_u-net'`
+- `--accuracy` Set to `True` if the Top-1 accuracy on the test set shall be calculated
+- `--plot` Set to `True` if some predictions shall be plotted
 
 ### Results
+TODO
