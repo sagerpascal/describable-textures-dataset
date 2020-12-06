@@ -10,6 +10,8 @@ import yaml
 # Read Config
 conf = yaml.load(open('config.yaml'), Loader=yaml.FullLoader)
 num_classes = conf['num_classes']
+loss = conf['loss']
+tiled = conf['tiled']
 
 # Mask range: 0-46
 class DtdDataset(torch.utils.data.Dataset):
@@ -39,14 +41,15 @@ class DtdDataset(torch.utils.data.Dataset):
     def __getitem__(self, item):
 
         filename = self.files[item]
-        img = Image.open(os.path.join(self.image_path, self.image_prefix + filename)).convert("RGB")
+        img = Image.open(os.path.join(self.image_path, self.image_prefix + filename))
+        img = img.convert("RGB") if tiled else img.convert("L")
         mask = Image.open(os.path.join(self.image_path, self.mask_prefix + filename))
         img = np.array(img)
         mask = np.array(mask)
 
         mask = self.normalize_mask(mask)
         mask = self.resize_mask(mask)
-        img = self.normalize_image(img)
+        img = self.normalize_image(img, filename)
 
         # apply augmentation
         if self.augmentation is not None:
@@ -73,9 +76,12 @@ class DtdDataset(torch.utils.data.Dataset):
     def normalize_mask(self, mask):
         return mask - 1
 
-    def normalize_image(self, image):
+    def normalize_image(self, image, filename):
+        old_settings = np.seterr(divide='ignore', invalid='ignore')
         img = image / 255.0
-        return (img - np.mean(img)) / np.std(img)
+        result = (img - np.mean(img, axis=(0, 1), keepdims=True)) / np.std(img, axis=(0, 1), keepdims=True)
+        np.seterr(**old_settings)
+        return result
 
     def __len__(self):
         return len(self.files)
@@ -134,19 +140,22 @@ def to_tensor(x, **kwargs):
     '''
     Convert image to tensor
     '''
-    return torch.as_tensor(x.transpose(2, 0, 1).astype('float32'))
+    if tiled:
+        return torch.as_tensor(x.transpose(2, 0, 1).astype('float32'))
+    else:
+        return torch.as_tensor(x.astype('float32')).unsqueeze(dim=0)
 
 
 def to_tensor_mask(x, **kwargs):
     '''
     Convert mask to tensor
     '''
-    # With BCELossWithDigits
-    x_tensor = torch.as_tensor(x.astype('int64'))
-    x_oh = torch.nn.functional.one_hot(x_tensor, num_classes=num_classes).type(torch.DoubleTensor)
-    return x_oh.permute(2, 0, 1)
-    # With CrossEntropyLoss
-    # return torch.as_tensor(x.astype('int64'))
+    if loss == 'cross-entropy':
+        return torch.as_tensor(x.astype('int64'))
+    else:
+        x_tensor = torch.as_tensor(x.astype('int64'))
+        x_oh = torch.nn.functional.one_hot(x_tensor, num_classes=num_classes).type(torch.DoubleTensor)
+        return x_oh.permute(2, 0, 1)
 
 
 def get_preprocessing():
@@ -165,12 +174,19 @@ def plot_some_data():
 
     dataset = DtdDataset('data/dtd_train_tiled', mask_size=(128, 128), preprocessing=get_preprocessing())
 
-    for i in range(10):
-        img, _, lab = dataset[i]
-        img = img.numpy().transpose(1, 2, 0)
-        plt.imshow(unormalize_image(img))
-        plt.title("Label: {}".format(lab))
-        plt.show()
+    for i in range(len(dataset)):
+        img, mask, lab = dataset[i]
+        if lab == 0:
+            img = img.numpy().transpose(1, 2, 0)
+            img = unormalize_image(img)
+            amask = mask.numpy().argmax(axis=0)
+
+            fig, axs = plt.subplots(ncols=2, figsize=(10, 4))
+            axs[0].set_title("Image")
+            axs[0].imshow(img)
+            axs[1].set_title("Mask (Label: {})".format(lab))
+            axs[1].imshow(amask, vmin=0, vmax=num_classes - 1, cmap='prism')
+            plt.show()
 
 
 if __name__ == '__main__':
