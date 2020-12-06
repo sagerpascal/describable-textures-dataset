@@ -77,11 +77,8 @@ class DtdDataset(torch.utils.data.Dataset):
         return mask - 1
 
     def normalize_image(self, image, filename):
-        old_settings = np.seterr(divide='ignore', invalid='ignore')
         img = image / 255.0
-        result = (img - np.mean(img, axis=(0, 1), keepdims=True)) / np.std(img, axis=(0, 1), keepdims=True)
-        np.seterr(**old_settings)
-        return result
+        return (img - np.mean(img, axis=(0, 1), keepdims=True)) / np.std(img, axis=(0, 1), keepdims=True)
 
     def __len__(self):
         return len(self.files)

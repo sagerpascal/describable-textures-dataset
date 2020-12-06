@@ -20,6 +20,7 @@ class SimpleFullyCnn(nn.Module):
             nn.Conv2d(in_channels=128, out_channels=128, kernel_size=3, stride=1),
             nn.Conv2d(in_channels=128, out_channels=256, kernel_size=3, stride=1),
             nn.Conv2d(in_channels=256, out_channels=256, kernel_size=3, stride=1),
+            nn.Conv2d(in_channels=256, out_channels=256, kernel_size=3, stride=1),
             nn.Conv2d(in_channels=256, out_channels=256, kernel_size=1, stride=1),
             nn.Conv2d(in_channels=256, out_channels=out_channels, kernel_size=1, stride=1)
         )

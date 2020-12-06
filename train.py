@@ -7,7 +7,7 @@ import torch
 import yaml
 from torch.utils.data import DataLoader
 
-from dataset import DtdDataset, get_preprocessing
+from dataset import DtdDataset, get_preprocessing, get_training_augmentation, get_validation_augmentation
 from epoch import TrainEpoch, ValidEpoch
 from losses import WeightedBCEWithLogitsLoss, DiceLoss
 from metrics import Accuracy, Fscore, Recall, Precision, AccuracyT1
@@ -45,11 +45,9 @@ def get_data_loaders(mask_size):
     Returns the dataloader for training, validation and testing
     '''
     suffix = '_tiled' if tiled else ''
-    train_dataset = DtdDataset('data/dtd_train{}'.format(suffix), mask_size, augmentation=None,
-                               # TODO get_training_augmentation(),
+    train_dataset = DtdDataset('data/dtd_train{}'.format(suffix), mask_size, augmentation=None,  # TODO get_training_augmentation(),
                                preprocessing=get_preprocessing())
-    valid_dataset = DtdDataset('data/dtd_val{}'.format(suffix), mask_size, augmentation=None,
-                               # TODO get_validation_augmentation(),
+    valid_dataset = DtdDataset('data/dtd_val{}'.format(suffix), mask_size, augmentation=None,  # TODO get_validation_augmentation(),
                                preprocessing=get_preprocessing())
 
     # only use subset for testing
@@ -121,7 +119,9 @@ def main():
         wandb.init(project="compvis_dtd_{}".format(model_name))
         wandb.config.update({"Model": model_name,
                              "Learning Rate": lr,
-                             "Batch Size": batch_size
+                             "Batch Size": batch_size,
+                             "Tiled": tiled,
+                             "Loss function": loss
                              })
     else:
         from torch.utils.tensorboard import SummaryWriter
@@ -151,15 +151,15 @@ def main():
         train_logs = train_epoch.run(train_loader)
         valid_logs = valid_epoch.run(valid_loader)
 
-        if best_loss > valid_logs[loss.__name__] + 0.00005:
-            best_loss = valid_logs[loss.__name__]
-            save_model(i, loss, model, valid_logs)
+        if best_loss > valid_logs[loss_.__name__] + 0.00005:
+            best_loss = valid_logs[loss_.__name__]
+            save_model(i, loss_, model, valid_logs)
             count_not_improved = 0
         else:
             count_not_improved += 1
 
         if i % 10 == 0:
-            save_model(i, loss, model, valid_logs)
+            save_model(i, loss_, model, valid_logs)
 
         if use_wandb:
             logs = {"epoch": i, "train loss": train_logs[loss_.__name__], "valid loss": valid_logs[loss_.__name__]}
@@ -183,14 +183,14 @@ def main():
             break
 
 
-def save_model(i, loss, model, valid_logs):
+def save_model(i, loss_, model, valid_logs):
     path = 'data/trained_models'
     if not os.path.exists(path):
         os.mkdir(path)
     if use_wandb:
-        torch.save(model, '{}/{}-{}-{}.pth'.format(path, wandb.run.name, valid_logs[loss.__name__], i))
+        torch.save(model, '{}/{}-{}-{}.pth'.format(path, wandb.run.name, valid_logs[loss_.__name__], i))
     else:
-        torch.save(model, '{}/{}-{}-{}.pth'.format(path, model_name, valid_logs[loss.__name__], i))
+        torch.save(model, '{}/{}-{}-{}.pth'.format(path, model_name, valid_logs[loss_.__name__], i))
     print("Model saved")
 
 if __name__ == '__main__':
