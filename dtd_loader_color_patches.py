@@ -10,7 +10,7 @@ import sys
 import tarfile
 import urllib.request
 import skimage.io
-
+import argparse
 import numpy as np
 import scipy.io
 import skimage.color
@@ -31,6 +31,11 @@ DTD_DEST_ZIP_FILE = "dtd-r1.0.1.tar.gz"
 _IMAGE_SUB_DIR = 'dtd/images'
 MAT_FILE = 'dtd/imdb/imdb.mat'
 
+
+parser = argparse.ArgumentParser()
+parser.add_argument("--tiled")
+args = parser.parse_args()
+tiled = bool(args.tiled)
 
 def extract_image_centers(image:np.ndarray, patch_size: Tuple):
     """Return a patch from the center of the image with the given size"""
@@ -388,4 +393,4 @@ def download_and_convert(dataset_dir = '.', dest_dir_root='.', tiled=False):
 
 
 if __name__ == '__main__':
-    download_and_convert(dest_dir_root='data/', tiled=True)
+    download_and_convert(dest_dir_root='data/', tiled=tiled)
