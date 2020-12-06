@@ -11,17 +11,29 @@ class SimpleFullyCnn(nn.Module):
         super(SimpleFullyCnn, self).__init__()
         self.layers = nn.Sequential(
             nn.Conv2d(in_channels=in_channels, out_channels=16, kernel_size=3, stride=1),
+            nn.ReLU(),
             nn.Conv2d(in_channels=16, out_channels=16, kernel_size=3, stride=1),
+            nn.ReLU(),
             nn.Conv2d(in_channels=16, out_channels=32, kernel_size=3, stride=1),
+            nn.ReLU(),
             nn.Conv2d(in_channels=32, out_channels=32, kernel_size=3, stride=1),
+            nn.ReLU(),
             nn.Conv2d(in_channels=32, out_channels=64, kernel_size=3, stride=1),
+            nn.ReLU(),
             nn.Conv2d(in_channels=64, out_channels=64, kernel_size=3, stride=1),
+            nn.ReLU(),
             nn.Conv2d(in_channels=64, out_channels=128, kernel_size=3, stride=1),
+            nn.ReLU(),
             nn.Conv2d(in_channels=128, out_channels=128, kernel_size=3, stride=1),
+            nn.ReLU(),
             nn.Conv2d(in_channels=128, out_channels=256, kernel_size=3, stride=1),
+            nn.ReLU(),
             nn.Conv2d(in_channels=256, out_channels=256, kernel_size=3, stride=1),
+            nn.ReLU(),
             nn.Conv2d(in_channels=256, out_channels=256, kernel_size=3, stride=1),
+            nn.ReLU(),
             nn.Conv2d(in_channels=256, out_channels=256, kernel_size=1, stride=1),
+            nn.ReLU(),
             nn.Conv2d(in_channels=256, out_channels=out_channels, kernel_size=1, stride=1)
         )
 
@@ -35,7 +47,7 @@ class SimpleFullyCnn(nn.Module):
         return x
 
     def get_mask_size(self):
-        return 108, 108
+        return 106, 106
 
 #################################################################################################
 # Simple U-Net

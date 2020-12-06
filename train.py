@@ -107,7 +107,7 @@ def get_loss(mask_size):
         l.__name__ = 'Cross Entropy Loss'
         return l
     else:
-        NotImplementedError("Unkonwn loss: {}".format(loss))
+        NotImplementedError("Unknown loss: {}".format(loss))
 
 
 def main():

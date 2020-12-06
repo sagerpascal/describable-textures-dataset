@@ -11,7 +11,7 @@ loss = conf['loss']
 
 def _preprocess(pr):
     if loss == 'cross-entropy':
-        return torch.argmax(pr, axis=1)
+        return torch.argmax(pr, dim=1)
     else:
         return pr
 
@@ -57,8 +57,8 @@ def f_score(pr, gt, beta=1, eps=1e-7, threshold=None, ignore_channels=None):
 #     return score
 
 def accuracyT1(pr, gt, ignore_channels=None):
-    pr_ = torch.argmax(pr, axis=1)
-    gt_ = gt if loss == 'cross-entropy' else torch.argmax(gt, axis=1)
+    pr_ = torch.argmax(pr, dim=1)
+    gt_ = gt if loss == 'cross-entropy' else torch.argmax(gt, dim=1)
     pr_, gt_ = _take_channels(pr_, gt_, ignore_channels=ignore_channels)
 
     tp = torch.sum(gt_ == pr_, dtype=pr_.dtype)
