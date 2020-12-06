@@ -184,12 +184,13 @@ def main():
 
 
 def save_model(i, loss, model, valid_logs):
-    if not os.path.exists('trained_models'):
-        os.mkdir('trained_models')
+    path = 'data/trained_models'
+    if not os.path.exists(path):
+        os.mkdir(path)
     if use_wandb:
-        torch.save(model, 'trained_models/{}-{}-{}.pth'.format(wandb.run.name, valid_logs[loss.__name__], i))
+        torch.save(model, '{}/{}-{}-{}.pth'.format(path, wandb.run.name, valid_logs[loss.__name__], i))
     else:
-        torch.save(model, 'trained_models/{}-{}-{}.pth'.format(model_name, valid_logs[loss.__name__], i))
+        torch.save(model, '{}/{}-{}-{}.pth'.format(path, model_name, valid_logs[loss.__name__], i))
     print("Model saved")
 
 if __name__ == '__main__':
@@ -197,10 +198,10 @@ if __name__ == '__main__':
 
 
 # Not tiled
-# Simple FCN: --learning_rate 0.001 --batch_size 1 --model_name simple_fcn --loss cross-entropy
-# Simple U-Net 2: --learning_rate 0.001 --batch_size 1 --model_name simple_u-net --loss cross-entropy
+# Simple FCN: --learning_rate 0.001 --batch_size 1 --model_name simple_fcn
+# Simple U-Net 2: --learning_rate 0.001 --batch_size 1 --model_name simple_u-net
 
 # tiled
-# Simple FCN: --learning_rate 0.0001 --batch_size 1 --model_name simple_fcn --loss cross-entropy
-# Simple U-Net 2: --learning_rate 0.0001 --batch_size 1 --model_name simple_u-net --loss cross-entropy
-# Ext U-Net 2: --learning_rate 0.0001 --batch_size 1 --model_name pretrained_u-net --loss cross-entropy
+# Simple FCN: --learning_rate 0.0001 --batch_size 1 --model_name simple_fcn
+# Simple U-Net 2: --learning_rate 0.0001 --batch_size 1 --model_name simple_u-net
+# Ext U-Net 2: --learning_rate 0.0001 --batch_size 1 --model_name pretrained_u-net
