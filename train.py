@@ -1,6 +1,8 @@
 import argparse
 import os
 
+import wandb
+import numpy as np
 import torch
 import yaml
 from torch.utils.data import DataLoader
@@ -149,18 +151,15 @@ def main():
         train_logs = train_epoch.run(train_loader)
         valid_logs = valid_epoch.run(valid_loader)
 
-        if best_loss > valid_logs[loss_.__name__] + 0.00005:
-            best_loss = valid_logs[loss_.__name__]
-            if not os.path.exists('trained_models'):
-                os.mkdir('trained_models')
-            if use_wandb:
-                torch.save(model, 'trained_models/{}-{}-{}.pth'.format(wandb.run.name, valid_logs[loss_.__name__], i))
-            else:
-                torch.save(model, 'trained_models/{}-{}-{}.pth'.format(model_name, valid_logs[loss_.__name__], i))
-            print("Model saved")
+        if best_loss > valid_logs[loss.__name__] + 0.00005:
+            best_loss = valid_logs[loss.__name__]
+            save_model(i, loss, model, valid_logs)
             count_not_improved = 0
         else:
             count_not_improved += 1
+
+        if i % 10 == 0:
+            save_model(i, loss, model, valid_logs)
 
         if use_wandb:
             logs = {"epoch": i, "train loss": train_logs[loss_.__name__], "valid loss": valid_logs[loss_.__name__]}
@@ -183,6 +182,15 @@ def main():
             print("Early stopping!")
             break
 
+
+def save_model(i, loss, model, valid_logs):
+    if not os.path.exists('trained_models'):
+        os.mkdir('trained_models')
+    if use_wandb:
+        torch.save(model, 'trained_models/{}-{}-{}.pth'.format(wandb.run.name, valid_logs[loss.__name__], i))
+    else:
+        torch.save(model, 'trained_models/{}-{}-{}.pth'.format(model_name, valid_logs[loss.__name__], i))
+    print("Model saved")
 
 if __name__ == '__main__':
     main()
