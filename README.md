@@ -3,7 +3,7 @@
 
 The data set consists of images with different structures which have to be classified. However, 
 instead of a simple label a mask must be predicted (semantic segmentation).
-For the first network, only conv layers may be used. For the second network the choice is 
+For the first network, only conv layers may be used. For the second network the choice 
 of the network architecture is free. I decided to use a U-Net, which was developed by the 
 University of Freiburg, Germany.
 
@@ -20,7 +20,7 @@ python dtd_loader_color_patches.py
 ```
 
 Arguments:
-- `--tiled`: Set to `True` if you want to use tiled images
+- `--tiled`: Set to `True` if you want to use the larger colored data set
 
 Also both dataset (tiled and not tiled) can be downloaded. However, in the file `config.yaml` must be specified which
 dataset shall be used for training and testing.
@@ -62,7 +62,8 @@ wandb sweep sweep.yaml
 wandb agent your-sweep-id
 ```
 
-### Run a pretrained model
+### Run a trained model
+
 ```shell script
 python evaluate.py [OPTIONS]
 ```
@@ -70,6 +71,3 @@ Arguments:
 - `--model_name`: Name of the model, one of `'simple_fcn'`, `'simple_u-net'` or `'pretrained_u-net'`
 - `--accuracy` Set to `True` if the Top-1 accuracy on the test set shall be calculated
 - `--plot` Set to `True` if some predictions shall be plotted
-
-### Results
-TODO
