@@ -32,12 +32,17 @@ plot_examples = bool(args.plot)
 def load_model():
     model = torch.load("trained_models/{}.pth".format(model_name), map_location=torch.device(device))
     model.eval()
+
+    print("Model has {} parameters".format(sum(p.numel() for p in model.parameters())))
+    print(model)
+
     mask_size = model.get_mask_size() if model_name.startswith('simple_fcn') else (128, 128)
     return model, mask_size
 
 
 def get_dataset(mask_size):
-    return DtdDataset('data/dtd_test_tiled', mask_size=mask_size, augmentation=None, preprocessing=get_preprocessing())
+    path = 'data/dtd_test_tiled' if conf['tiled'] else 'data/dtd_test'
+    return DtdDataset(path, mask_size=mask_size, augmentation=None, preprocessing=get_preprocessing())
 
 
 def unormalize_image(img):
@@ -54,6 +59,9 @@ def plot_some_examples(dataset, model, n_examples):
         X = img.unsqueeze(0)
         pred = model.predict(X)
 
+        if mask.ndim == 2:
+            mask = mask.unsqueeze(0)
+
         amask = mask.cpu().numpy().argmax(axis=0)
         pmask = pred.cpu().numpy()[0].argmax(axis=0)
         img = img.cpu().numpy().transpose(1, 2, 0)
@@ -62,7 +70,10 @@ def plot_some_examples(dataset, model, n_examples):
         fig, axs = plt.subplots(ncols=3, figsize=(10, 4))
 
         axs[0].set_title("Image")
-        axs[0].imshow(img)
+        if conf['tiled']:
+            axs[0].imshow(img)
+        else:
+            axs[0].imshow(img, cmap='gray')
         axs[1].set_title("Predicted Mask")
         axs[1].imshow(pmask, vmin=0, vmax=num_classes-1, cmap='prism')
         axs[2].set_title("Actual Mask")
@@ -86,7 +97,7 @@ def get_accuracy(dataset, model):
 
             acc_value = acc_fn(y_pred, y).cpu().detach().numpy()
             acc_meter.add(acc_value)
-            iterator.set_postfix_str("Accuracy - {}".format(acc_meter.mean))
+            iterator.set_postfix_str("T1-Accuracy - {}".format(acc_meter.mean))
 
     return acc_meter.mean
 
