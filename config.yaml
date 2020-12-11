@@ -1,5 +1,5 @@
 device: cuda
 num_classes: 47
-max_num_epoch: 500
+max_num_epoch: 50000
 loss: cross-entropy
 tiled: True

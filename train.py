@@ -28,6 +28,7 @@ parser.add_argument("--batch_size")
 parser.add_argument("--model_name")
 parser.add_argument("--wandb")
 parser.add_argument("--early_stopping")
+parser.add_argument("--load_weights")
 
 args = parser.parse_args()
 lr = float(args.learning_rate)
@@ -35,7 +36,7 @@ batch_size = int(args.batch_size)
 model_name = str(args.model_name)
 use_wandb = bool(args.wandb)
 with_early_stopping = bool(args.early_stopping)
-
+load_weights = str(args.load_weights)
 
 torch.cuda.empty_cache()
 
@@ -47,7 +48,7 @@ def get_data_loaders(mask_size):
     suffix = '_tiled' if tiled else ''
     train_dataset = DtdDataset('data/dtd_train{}'.format(suffix), mask_size, augmentation=None,  # TODO get_training_augmentation(),
                                preprocessing=get_preprocessing())
-    valid_dataset = DtdDataset('data/dtd_val{}'.format(suffix), mask_size, augmentation=None,  # TODO get_validation_augmentation(),
+    valid_dataset = DtdDataset('data/dtd_val{}'.format(suffix), mask_size, augmentation=None, # TODO get_validation_augmentation(),
                                preprocessing=get_preprocessing())
 
     # only use subset for testing
@@ -90,6 +91,9 @@ def get_model():
         mask_size = (128, 128)
     else:
         raise NotImplementedError("no such model: {}".format(model_name))
+
+    if load_weights is not None and load_weights != 'None':
+        model = torch.load("data/trained_models/{}.pth".format(load_weights), map_location=torch.device(device))
 
     print("Model has {} parameters".format(sum(p.numel() for p in model.parameters())))
     print(model)
@@ -158,7 +162,7 @@ def main():
         else:
             count_not_improved += 1
 
-        if i % 10 == 0:
+        if i % 50 == 0:
             save_model(i, loss_, model, valid_logs)
 
         if use_wandb:
@@ -205,3 +209,8 @@ if __name__ == '__main__':
 # Simple FCN: --learning_rate 0.0001 --batch_size 1 --model_name simple_fcn
 # Simple U-Net 2: --learning_rate 0.0001 --batch_size 1 --model_name simple_u-net
 # Ext U-Net 2: --learning_rate 0.0001 --batch_size 1 --model_name pretrained_u-net
+
+
+# Best result simple:
+# train: 100%|██████████| 1840/1840 [00:34<00:00, 53.92it/s, Cross Entropy Loss - 3.265, Accuracy - 0.03042, Top-1-Accuracy - 0.1435, F-Score - 1.782, Recall - 0.9854, Precision - 22.5]
+# valid: 100%|██████████| 1840/1840 [00:24<00:00, 74.12it/s, Cross Entropy Loss - 3.51, Accuracy - 0.02814, Top-1-Accuracy - 0.1115, F-Score - 1.779, Recall - 0.9836, Precision - 22.5]

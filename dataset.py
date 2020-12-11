@@ -54,7 +54,7 @@ class DtdDataset(torch.utils.data.Dataset):
         # apply augmentation
         if self.augmentation is not None:
             sample = self.augmentation(image=img)
-            img = sample['image']  # TODO: Augment mask also
+            img = sample['image']
 
         label = np.array(mask[0][0])
         # check if all labels are equal
@@ -88,9 +88,9 @@ def get_training_augmentation():
     train_transform = [
         A.HorizontalFlip(p=0.5),
         A.VerticalFlip(p=0.5),
-        A.RandomRotate90(p=1),
-        # A.ShiftScaleRotate(scale_limit=0.5, rotate_limit=0, shift_limit=0.1, p=1, border_mode=0),
-
+        A.RandomRotate90(p=1.),
+        # A.ShiftScaleRotate(scale_limit=0.5, rotate_limit=0, shift_limit=0.1, p=1., border_mode=0),
+        #
         # A.PadIfNeeded(min_height=128, min_width=128, always_apply=True, border_mode=0),
         # A.RandomCrop(height=128, width=128, always_apply=True),
         #
@@ -99,26 +99,26 @@ def get_training_augmentation():
         #
         # A.OneOf(
         #     [
-        #         A.CLAHE(p=1),
-        #         A.RandomBrightness(p=1),
-        #         A.RandomGamma(p=1),
+        #         A.CLAHE(p=1.),
+        #         A.RandomBrightness(p=1.),
+        #         A.RandomGamma(p=1.),
         #     ],
         #     p=0.9,
         # ),
         #
         # A.OneOf(
         #     [
-        #         A.IAASharpen(p=1),
-        #         A.Blur(blur_limit=3, p=1),
-        #         A.MotionBlur(blur_limit=3, p=1),
+        #         A.IAASharpen(p=1.),
+        #         A.Blur(blur_limit=3., p=1.),
+        #         A.MotionBlur(blur_limit=3., p=1.),
         #     ],
         #     p=0.9,
         # ),
         #
         # A.OneOf(
         #     [
-        #         A.RandomContrast(p=1),
-        #         A.HueSaturationValue(p=1),
+        #         A.RandomContrast(p=1.),
+        #         A.HueSaturationValue(p=1.),
         #     ],
         #     p=0.9,
         # ),

@@ -10,31 +10,21 @@ class SimpleFullyCnn(nn.Module):
     def __init__(self, in_channels, out_channels):
         super(SimpleFullyCnn, self).__init__()
         self.layers = nn.Sequential(
-            nn.Conv2d(in_channels=in_channels, out_channels=16, kernel_size=3, stride=1),
+            nn.Conv2d(in_channels=in_channels, out_channels=4, kernel_size=3, stride=1),
             nn.ReLU(),
-            nn.Conv2d(in_channels=16, out_channels=16, kernel_size=3, stride=1),
+            nn.Conv2d(in_channels=4, out_channels=4, kernel_size=3, stride=1),
+            nn.ReLU(),
+            nn.Conv2d(in_channels=4, out_channels=8, kernel_size=3, stride=1),
+            nn.ReLU(),
+            nn.Conv2d(in_channels=8, out_channels=8, kernel_size=3, stride=1),
+            nn.ReLU(),
+            nn.Conv2d(in_channels=8, out_channels=16, kernel_size=3, stride=1),
             nn.ReLU(),
             nn.Conv2d(in_channels=16, out_channels=32, kernel_size=3, stride=1),
             nn.ReLU(),
-            nn.Conv2d(in_channels=32, out_channels=32, kernel_size=3, stride=1),
-            nn.ReLU(),
             nn.Conv2d(in_channels=32, out_channels=64, kernel_size=3, stride=1),
             nn.ReLU(),
-            nn.Conv2d(in_channels=64, out_channels=64, kernel_size=3, stride=1),
-            nn.ReLU(),
-            nn.Conv2d(in_channels=64, out_channels=128, kernel_size=3, stride=1),
-            nn.ReLU(),
-            nn.Conv2d(in_channels=128, out_channels=128, kernel_size=3, stride=1),
-            nn.ReLU(),
-            nn.Conv2d(in_channels=128, out_channels=256, kernel_size=3, stride=1),
-            nn.ReLU(),
-            nn.Conv2d(in_channels=256, out_channels=256, kernel_size=3, stride=1),
-            nn.ReLU(),
-            nn.Conv2d(in_channels=256, out_channels=256, kernel_size=3, stride=1),
-            nn.ReLU(),
-            nn.Conv2d(in_channels=256, out_channels=256, kernel_size=1, stride=1),
-            nn.ReLU(),
-            nn.Conv2d(in_channels=256, out_channels=out_channels, kernel_size=1, stride=1)
+            nn.Conv2d(in_channels=64, out_channels=out_channels, kernel_size=1, stride=1)
         )
 
     def forward(self, x):
@@ -47,7 +37,7 @@ class SimpleFullyCnn(nn.Module):
         return x
 
     def get_mask_size(self):
-        return 106, 106
+        return 114, 114
 
 #################################################################################################
 # Simple U-Net
@@ -57,7 +47,7 @@ class SimpleUnet(nn.Module):
     def __init__(self, in_channels, out_channels):
         super().__init__()
 
-        self.conv1 = self.contract_block(in_channels, 32, 7, 3)
+        self.conv1 = self.contract_block(in_channels, 32, 3, 1)
         self.conv2 = self.contract_block(32, 64, 3, 1)
         self.conv3 = self.contract_block(64, 128, 3, 1)
         self.conv4 = self.contract_block(128, 256, 3, 1)
@@ -83,25 +73,27 @@ class SimpleUnet(nn.Module):
     def contract_block(self, in_channels, out_channels, kernel_size, padding):
         contract = nn.Sequential(
             nn.Conv2d(in_channels, out_channels, kernel_size=kernel_size, stride=1, padding=padding),
-            nn.BatchNorm2d(out_channels),
-            nn.ReLU(),
+            # nn.BatchNorm2d(out_channels),
+            # nn.ReLU(),
             nn.Conv2d(out_channels, out_channels, kernel_size=kernel_size, stride=1, padding=padding),
-            nn.BatchNorm2d(out_channels),
             nn.ReLU(),
-            nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
+            nn.MaxPool2d(kernel_size=3, stride=2, padding=1),
+            nn.BatchNorm2d(out_channels),
+            nn.Dropout()
         )
 
         return contract
 
     def expand_block(self, in_channels, out_channels, kernel_size, padding):
         expand = nn.Sequential(nn.Conv2d(in_channels, out_channels, kernel_size, stride=1, padding=padding),
-                               nn.BatchNorm2d(out_channels),
-                               nn.ReLU(),
+                               # nn.BatchNorm2d(out_channels),
+                               # nn.ReLU(),
                                nn.Conv2d(out_channels, out_channels, kernel_size, stride=1, padding=padding),
-                               nn.BatchNorm2d(out_channels),
                                nn.ReLU(),
                                nn.ConvTranspose2d(out_channels, out_channels, kernel_size=3, stride=2, padding=1,
-                                                  output_padding=1)
+                                                  output_padding=1),
+                               nn.BatchNorm2d(out_channels),
+                               nn.Dropout()
                                )
         return expand
 
